@@ -1,0 +1,186 @@
+# ============================================================================
+# Data and Models - Large files that should not be in git
+# ============================================================================
+
+# Data directories (666MB)
+DART-main/data/
+data/
+
+# Model checkpoints and training outputs (236MB + 95MB + 74MB)
+DART-main/mld_denoiser/
+DART-main/mvae/
+DART-main/policy_train/
+DART-main/FlowMDM/results/
+mld_denoiser/
+mvae/
+policy_train/
+
+# Generated outputs
+DART-main/*/rollout/
+DART-main/*/optim/
+outputs/
+results/
+
+# Model files
+*.pt
+*.pth
+*.pkl
+*.ckpt
+*.safetensors
+*.bin
+
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# IDE and Editors
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# ============================================================================
+# OS
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+
+# Conda environments (but keep yml files)
+DART-main/DART/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Logs
+logs/
+*.log
+
+# PyTorch 3D build artifacts
+DART-main/pytorch3d/build/
+DART-main/pytorch3d/dist/
+DART-main/pytorch3d/*.egg-info/
+
+# CLIP clone
+clip_repo/
+
+# Wandb
+wandb/
+
+# Cache
+.cache/
+
+# ============================================================================
+# Keep These Files (negation patterns)
+# ============================================================================
+
+# Keep environment configuration files
+!environment*.yml
+!requirements.txt
+
+# Keep setup scripts
+!setup*.sh
+!*verify*.py
+!*check*.sh
+
+# Keep documentation
+!README*.md
+!INSTALL*.md
+!*.md
