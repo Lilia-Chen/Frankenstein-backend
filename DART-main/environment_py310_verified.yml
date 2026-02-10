@@ -1,0 +1,342 @@
+name: DART
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # ============================================================================
+  # Core Python 3.10 (REQUIRED for PyTorch 2.10+ and sm_120 support)
+  # ============================================================================
+  - python=3.10
+  - pip
+
+  # ============================================================================
+  # Scientific Computing - CRITICAL: Version-locked for compatibility
+  # ============================================================================
+  # IMPORTANT: numpy MUST be 1.21.5 (code uses deprecated np.float)
+  # DO NOT upgrade to numpy 1.23+ or 2.x - will cause AttributeError
+  - numpy=1.21.5
+  - scipy=1.10.1
+  - pandas=2.0.0
+  - scikit-learn=1.2.2
+  - matplotlib=3.3.4
+  - seaborn=0.13.0
+  - statsmodels=0.13.5
+
+  # ============================================================================
+  # Deep Learning Support
+  # ============================================================================
+  - pillow
+  - networkx
+  - sympy
+  - mpmath
+  - pyyaml
+  - tqdm
+  - requests
+  - filelock
+
+  # ============================================================================
+  # Development Tools
+  # ============================================================================
+  - jupyter
+  - ipython
+  - notebook
+  - jupyterlab
+
+  # ============================================================================
+  # Build Tools
+  # ============================================================================
+  # CRITICAL: setuptools must be <70 for CLIP installation
+  # setuptools 70+ removed pkg_resources which CLIP's setup.py needs
+  - setuptools<70
+  - wheel
+  - toml
+  - packaging
+
+  # ============================================================================
+  # System Libraries
+  # ============================================================================
+  - ffmpeg
+  - openssl
+  - zlib
+  - bzip2
+
+  # ============================================================================
+  # Pip Packages - Complete verified dependency list
+  # ============================================================================
+  - pip:
+      # Core dependencies
+      - absl-py==2.1.0
+      - addict==2.4.0
+      - aiofiles==22.1.0
+      - aiohappyeyeballs==2.4.3
+      - aiohttp==3.10.11
+      - aiosignal==1.3.1
+      - aiosqlite==0.20.0
+      - annotated-types==0.6.0
+      - antlr4-python3-runtime==4.9.3
+      - anyio==4.3.0
+      - appdirs==1.4.4
+      - argon2-cffi==23.1.0
+      - argon2-cffi-bindings==21.2.0
+      - arrow==1.3.0
+      - asttokens==2.4.1
+      - async-timeout==5.0.1
+      - attrs==23.2.0
+      - autobahn==23.1.2
+      - babel==2.14.0
+      - backcall==0.2.0
+      - beautifulsoup4==4.12.3
+      - bleach==6.1.0
+      - blis==0.7.11
+      - blobfile==2.1.1
+      - cachetools==5.3.3
+      - catalogue==1.0.2
+      - cffi==1.16.0
+      # chumpy==0.70  # SKIP: Installation fails with pkg_resources error
+      - click==8.1.7
+      # CLIP installed separately - see post-install instructions
+      - comm==0.2.1
+      - cryptography==43.0.3
+      - cymem==2.0.8
+      - debugpy==1.8.1
+      - decorator==5.1.1
+      - defusedxml==0.7.1
+      - deprecation==2.1.0
+      - distro==1.9.0
+      - docker-pycreds==0.4.0
+      - docstring-parser==0.16
+      - einops==0.7.0
+      - entrypoints==0.4
+      - eval-type-backport==0.1.3
+      - exceptiongroup==1.2.0
+      - executing==2.0.1
+      - fastjsonschema==2.19.1
+      - fqdn==1.5.1
+      - freetype-py==2.4.0
+      - frozenlist==1.5.0
+      - fsspec==2024.2.0
+      - ftfy==6.1.3
+      - gitdb==4.0.11
+      - gitpython==3.1.43
+      - google-auth==2.28.1
+      - google-auth-oauthlib==1.0.0
+      - grpcio==1.62.0
+      - h11==0.14.0
+      - h5py==3.11.0
+      - httpcore==1.0.4
+      - httpx==0.27.0
+      - hydra-core==1.3.2
+      - hyperlink==21.0.0
+      - imageio==2.34.0
+      - importlib-metadata==7.0.2
+      - importlib-resources==6.1.3
+      - ipykernel==6.29.3
+      - ipython==8.12.3
+      - ipython-genutils==0.2.0
+      - ipywidgets==8.1.2
+      - isoduration==20.11.0
+      - jedi==0.19.1
+      - json5==0.9.22
+      - jsonpointer==2.4
+      - jsonschema==4.21.1
+      - jsonschema-specifications==2023.12.1
+      - jupyter==1.1.1
+      - jupyter-client==7.4.9
+      - jupyter-console==6.6.3
+      - jupyter-core==5.7.1
+      - jupyter-events==0.9.0
+      - jupyter-packaging==0.12.3
+      - jupyter-server==2.13.0
+      - jupyter-server-fileid==0.9.1
+      - jupyter-server-proxy==4.4.0
+      - jupyter-server-terminals==0.5.2
+      - jupyter-server-ydoc==0.8.0
+      - jupyter-ydoc==0.2.5
+      - jupyterlab==3.6.7
+      - jupyterlab-pygments==0.3.0
+      - jupyterlab-server==2.25.3
+      - jupyterlab-vpython==3.1.8
+      - jupyterlab-widgets==3.0.10
+      - lazy-loader==0.4
+      - loralib==0.1.2
+      - lxml==4.9.4
+      - markdown==3.5.2
+      - markdown-it-py==3.0.0
+      - matplotlib-inline==0.1.6
+      - mdurl==0.1.2
+      - mesh2sdf==1.1.0
+      - mistune==3.0.2
+      - multidict==6.1.0
+      - murmurhash==1.0.10
+      - nbclassic==1.0.0
+      - nbclient==0.9.0
+      - nbconvert==7.16.2
+      - nbformat==5.9.2
+      - nest-asyncio==1.6.0
+      - notebook==6.5.6
+      - notebook-shim==0.2.4
+      - oauthlib==3.2.2
+      - omegaconf==2.3.0
+      - open3d==0.13.0
+      - openai==1.13.3
+      - overrides==7.7.0
+      - pandocfilters==1.5.1
+      - parso==0.8.3
+      - pexpect==4.9.0
+      - pickleshare==0.7.5
+      - pkgutil-resolve-name==1.3.10
+      - plac==1.1.3
+      - preshed==3.0.9
+      - prometheus-client==0.20.0
+      - prompt-toolkit==3.0.43
+      - propcache==0.2.0
+      - protobuf==4.25.3
+      - psutil==5.9.8
+      - ptyprocess==0.7.0
+      - pure-eval==0.2.2
+      - pyasn1==0.5.1
+      - pyasn1-modules==0.3.0
+      - pycparser==2.21
+      - pycryptodomex==3.20.0
+      - pydantic==2.6.3
+      - pydantic-core==2.16.3
+      - pyglet==2.0.14
+      - pygments==2.17.2
+      - pynavmesh==1.2.3
+      - pyopengl==3.1.0
+      - pyrender==0.1.45
+      - python-json-logger==2.0.7
+      - pywavelets==1.4.1
+      - pyzmq==24.0.1
+      - referencing==0.33.0
+      - regex==2023.12.25
+      - requests-oauthlib==1.3.1
+      - rfc3339-validator==0.1.4
+      - rfc3986-validator==0.1.1
+      - rich==13.7.1
+      - rpds-py==0.18.0
+      - rsa==4.9
+      - rtree==1.2.0
+      - scikit-image==0.21.0
+      - send2trash==1.8.2
+      - sentry-sdk==1.45.0
+      - setproctitle==1.3.3
+      - shapely==2.0.4
+      - shtab==1.7.1
+      - simpervisor==1.0.0
+      - smmap==5.0.1
+      - smplx==0.1.28
+      - sniffio==1.3.1
+      - soupsieve==2.5
+      - spacy==2.3.4
+      - srsly==1.0.7
+      - stack-data==0.6.3
+      - tensorboard==2.14.0
+      - tensorboard-data-server==0.7.2
+      - tensorboardx==2.6.2.2
+      - terminado==0.18.0
+      - thinc==7.4.6
+      - tifffile==2023.7.10
+      - tinycss2==1.2.1
+      - tomlkit==0.12.4
+      - torch-dct==0.1.6
+      - traitlets==5.14.1
+      - trimesh==4.1.8
+      - txaio==23.1.1
+      - types-python-dateutil==2.8.19.20240106
+      - tyro==0.8.3
+      - uri-template==1.3.0
+      - vpython==7.6.5
+      - wandb==0.16.6
+      - wasabi==0.10.1
+      - wcwidth==0.2.13
+      - webcolors==1.13
+      - webencodings==0.5.1
+      - websocket-client==1.7.0
+      - werkzeug==3.0.1
+      - widgetsnbextension==4.0.10
+      - y-py==0.6.2
+      - yarl==1.15.2
+      - ypy-websocket==0.8.4
+      - zipp==3.17.0
+      - fvcore
+      - iopath
+      - portalocker
+      - tabulate
+      - termcolor
+      - yacs
+
+# ============================================================================
+# POST-INSTALL INSTRUCTIONS for RTX 5070 Ti (sm_120) Support
+# ============================================================================
+#
+# After creating the conda environment with this file, run these commands:
+#
+# 1. Activate the environment:
+#    conda activate DART
+#
+# 2. Install PyTorch 2.10+ with CUDA 12.8 (has sm_120 support):
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+#
+# 3. Install CLIP (requires setuptools<70 which is already installed):
+#    cd /path/to/workspace
+#    git clone https://github.com/openai/CLIP.git clip_repo
+#    cd clip_repo
+#    pip install -e . --no-build-isolation
+#
+# 4. Build pytorch3d from source:
+#    cd /path/to/workspace/pytorch3d
+#    pip install -e . --no-build-isolation
+#
+# 5. Verify installation:
+#    python verify_installation.py
+#
+# ============================================================================
+# CRITICAL VERSION NOTES
+# ============================================================================
+#
+# 1. Python 3.10+
+#    - REQUIRED for PyTorch 2.10+ (which supports sm_120)
+#    - Python 3.8 is NOT supported by PyTorch 2.10+
+#
+# 2. numpy 1.21.5
+#    - MUST use this exact version
+#    - Code uses deprecated np.float (removed in numpy 1.20+, error in 2.0+)
+#    - numpy 1.23+ or 2.x will cause: AttributeError: module 'numpy' has no attribute 'float'
+#
+# 3. matplotlib 3.3.4
+#    - Newer versions (3.4+) require numpy>=1.23
+#    - Must match numpy 1.21.5 requirement
+#
+# 4. setuptools<70
+#    - setuptools 70+ removed pkg_resources
+#    - CLIP's setup.py requires pkg_resources
+#    - Must be <70 for CLIP installation to work
+#
+# 5. PyTorch 2.10.0+cu128
+#    - First stable release with sm_120 (RTX 50-series) support
+#    - CUDA 12.8 required for Blackwell architecture
+#    - Installed via pip (not conda) for latest version
+#
+# ============================================================================
+# Tested System Configuration
+# ============================================================================
+# - GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU (sm_120)
+# - Driver Version: 591.74
+# - CUDA Version: 13.1 (system), 12.8 (PyTorch runtime)
+# - OS: Ubuntu 22.04.4 LTS / WSL2
+# - Python: 3.10.19
+# - PyTorch: 2.10.0+cu128
+# - pytorch3d: 0.7.9 (compiled from source)
+# - CLIP: 1.0
+#
+# ============================================================================
+# Installation Verification
+# ============================================================================
+# All demos verified working:
+# - Interactive text-to-motion generation (demos/run_demo.sh) ✓
+# - Headless motion composition (demos/rollout.sh) ✓
+# - Motion in-betweening ✓
+# - Scene interaction ✓
+# - Trajectory control ✓
+#

@@ -1,0 +1,120 @@
+name: DART
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Python 3.10
+  - python=3.10
+  - pip
+
+  # Scientific computing
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - statsmodels
+  - patsy
+
+  # Deep learning support
+  - pillow
+  - networkx
+  - sympy
+  - mpmath
+  - pyyaml
+  - tqdm
+  - requests
+  - filelock
+
+  # Development tools
+  - jupyter
+  - ipython
+  - notebook
+  - jupyterlab
+
+  # Build tools
+  - setuptools
+  - wheel
+  - toml
+  - packaging
+
+  # System libraries
+  - ffmpeg
+  - openssl
+  - zlib
+  - bzip2
+
+  # Pip packages
+  - pip:
+      # Core dependencies
+      - absl-py
+      - addict
+      - aiofiles
+      - aiohttp
+      - click
+      - einops
+      - fsspec
+      - ftfy
+      - gitpython
+      - h5py
+      - httpx
+      - hydra-core
+      - imageio
+      - ipykernel
+      - ipywidgets
+      - jupyter-server
+      - jupyterlab-widgets
+      - lxml
+      - markdown
+      - matplotlib-inline
+      - mesh2sdf
+      - nbclassic
+      - nbclient
+      - nbconvert
+      - notebook-shim
+      - omegaconf
+      - open3d
+      - openai
+      - protobuf
+      - pydantic
+      - pygments
+      - pyopengl
+      - pyrender
+      - pyzmq
+      - regex
+      - rich
+      - scikit-image
+      - shapely
+      - smplx
+      - spacy
+      - tensorboard
+      - tensorboardx
+      - trimesh
+      - tyro
+      - wandb
+      - fvcore
+      - iopath
+      - portalocker
+      - tabulate
+      - termcolor
+      - yacs
+      # CLIP will be installed separately after environment creation
+      # - git+https://github.com/openai/CLIP.git
+
+# ============================================================================
+# POST-INSTALL INSTRUCTIONS for RTX 5070 Ti (sm_120) support
+# ============================================================================
+#
+# After creating the conda environment, run these commands:
+#
+# 1. Install PyTorch 2.10+ with CUDA 12.6 (has sm_120 support):
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+#
+# 2. Build pytorch3d from source (located at ../pytorch3d/):
+#    cd ../pytorch3d
+#    pip install -e .
+#
+# Note: Python 3.10+ is required for PyTorch 2.10+
+# PyTorch 2.10 includes support for CUDA compute capabilities up to sm_120
+#
