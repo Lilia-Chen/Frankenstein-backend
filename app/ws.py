@@ -14,6 +14,17 @@ def _invalid(payload: Any) -> str:
 
 async def handle_motion_ws(ws: WebSocket) -> None:
     await ws.accept()
+    await ws.send_json(
+        {
+            "type": "handshake",
+            "capabilities": {
+                "supportsText": True,
+                "supportsSpatial": False,
+                "supportsTrajectory": False,
+                "supportsTransition": False,
+            },
+        }
+    )
     manager = SessionManager()
 
     try:
@@ -42,13 +53,19 @@ async def handle_motion_ws(ws: WebSocket) -> None:
                     )
                     continue
 
+                # Extract current_frame if provided
+                current_frame = None
+                if payload.current_frame is not None:
+                    current_frame = payload.current_frame.model_dump()
+
                 manager.start(
                     ws=ws,
                     req_id=req.id,
-                    text_prompt=payload.text_prompt,
+                    text_prompt=payload.conditioning.text,
                     duration_seconds=payload.duration_seconds,
                     fps=fps,
                     model_name=os.getenv("MOTION_MODEL", "mock"),
+                    current_frame=current_frame,
                 )
 
             elif msg_type == "cancel":

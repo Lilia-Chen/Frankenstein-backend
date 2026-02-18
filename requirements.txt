@@ -1,2 +1,4 @@
 fastapi==0.115.8
-uvicorn==0.30.6
+uvicorn[standard]==0.30.6
+websockets>=12.0
+python-dotenv>=1.0.0

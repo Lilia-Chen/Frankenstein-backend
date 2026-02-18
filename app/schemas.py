@@ -30,17 +30,23 @@ JointName = Literal[
 
 
 class MotionFrame(BaseModel):
-    index: int
     timestamp: float
-    root_translation: List[float] = Field(min_length=3, max_length=3)
+    root_position: List[float] = Field(min_length=3, max_length=3)
     root_rotation: List[float] = Field(min_length=4, max_length=4)
     joint_rotations: Dict[JointName, List[float]]
+    joint_positions: Optional[Dict[JointName, List[float]]] = None
+    root_velocity: Optional[List[float]] = Field(default=None, min_length=3, max_length=3)
+
+
+class ConditioningSpec(BaseModel):
+    text: str
 
 
 class GeneratePayload(BaseModel):
-    text_prompt: str
+    conditioning: ConditioningSpec
     duration_seconds: Optional[float] = None
     fps: Optional[float] = 30.0
+    current_frame: Optional[MotionFrame] = None  # Optional current pose for continuous generation
 
 
 class GenerateRequest(BaseModel):

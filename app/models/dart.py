@@ -221,11 +221,15 @@ class DartRuntime:
         denoiser_model = ClassifierFreeWrapper(denoiser_model)
 
         vae_checkpoint = denoiser_args.mvae_path
-        vae_dir = Path(vae_checkpoint).parent
+        # Handle relative paths relative to DART_ROOT
+        vae_checkpoint_path = Path(vae_checkpoint)
+        if not vae_checkpoint_path.is_absolute():
+            vae_checkpoint_path = self.dart_root / vae_checkpoint_path
+        vae_dir = vae_checkpoint_path.parent
         with open(vae_dir / "args.yaml", "r") as f:
             vae_args = tyro.extras.from_yaml(self.MVAEArgs, yaml.safe_load(f))
         vae_model = self.AutoMldVae(**asdict(vae_args.model_args)).to(device)
-        checkpoint = torch.load(denoiser_args.mvae_path, map_location=device)
+        checkpoint = torch.load(str(vae_checkpoint_path), map_location=device)
         model_state_dict = checkpoint["model_state_dict"]
         if "latent_mean" not in model_state_dict:
             model_state_dict["latent_mean"] = torch.tensor(0)
@@ -253,6 +257,99 @@ class DartRuntime:
             for _ in range(int(num_rollout)):
                 texts.append(action)
         return texts
+
+    def init_state_from_frames(self, frames: List[Dict]) -> Dict[str, torch.Tensor]:
+        """Initialize state from frontend frames (2 frames in SMPL-X coordinate system)"""
+        device = self.device_t
+
+        if len(frames) != self.history_length:
+            raise ValueError(f"Expected {self.history_length} frames, got {len(frames)}")
+
+        # Convert quaternions to rotation matrices
+        history_transl = []
+        history_global_orient = []
+        history_body_pose = []
+
+        for frame_data in frames:
+            # Root translation
+            root_pos = frame_data.get("root_position", frame_data.get("root_translation"))
+            if root_pos is None:
+                raise KeyError("frame missing root_position")
+            transl = torch.tensor(root_pos, device=device, dtype=torch.float32)
+            history_transl.append(transl)
+
+            # Root rotation (quaternion xyzw -> rotation matrix)
+            root_quat_xyzw = frame_data["root_rotation"]
+            root_quat = torch.tensor(root_quat_xyzw, device=device, dtype=torch.float32)
+            root_quat_wxyz = torch.tensor(
+                [root_quat[3], root_quat[0], root_quat[1], root_quat[2]], device=device
+            )
+            global_orient = p3d_transforms.quaternion_to_matrix(root_quat_wxyz.unsqueeze(0))[0]
+            history_global_orient.append(global_orient)
+
+            # Body pose (joint rotations -> rotation matrices)
+            # DART uses 21 joints (excluding pelvis which is in global_orient)
+            body_pose_list = []
+            dart_index = {name: idx for idx, name in enumerate(DART_JOINT_NAMES)}
+
+            for joint_name in DART_JOINT_NAMES[1:]:  # Skip pelvis (index 0)
+                if joint_name in frame_data["joint_rotations"]:
+                    joint_quat_xyzw = frame_data["joint_rotations"][joint_name]
+                    joint_quat = torch.tensor(joint_quat_xyzw, device=device, dtype=torch.float32)
+                    # Convert xyzw to wxyz
+                    joint_quat_wxyz = torch.tensor(
+                        [joint_quat[3], joint_quat[0], joint_quat[1], joint_quat[2]],
+                        device=device,
+                    )
+                    joint_rot = p3d_transforms.quaternion_to_matrix(joint_quat_wxyz.unsqueeze(0))[0]
+                else:
+                    # Default to identity rotation if joint not provided
+                    joint_rot = torch.eye(3, device=device, dtype=torch.float32)
+                body_pose_list.append(joint_rot)
+
+            body_pose = torch.stack(body_pose_list)  # [21, 3, 3]
+            history_body_pose.append(body_pose)
+
+        # Stack into tensors [batch=1, time=2, ...]
+        transl_tensor = torch.stack(history_transl).unsqueeze(0)  # [1, 2, 3]
+        global_orient_tensor = torch.stack(history_global_orient).unsqueeze(0)  # [1, 2, 3, 3]
+        body_pose_tensor = torch.stack(history_body_pose).unsqueeze(0)  # [1, 2, 21, 3, 3]
+
+        # Convert to DART's internal motion tensor format
+        # This requires using the primitive_utility to convert SMPL dict to feature tensor
+        gender = "female"
+        batch = self.dataset.get_batch(batch_size=self.batch_size)
+        betas = batch[0]["betas"][:, :self.history_length, :].to(device)
+
+        pelvis_delta = self.primitive_utility.calc_calibrate_offset(
+            {"betas": betas[:, 0, :], "gender": gender}
+        )
+
+        # Build SMPL dict for conversion
+        smpl_dict = {
+            "transl": transl_tensor,
+            "global_orient": global_orient_tensor,
+            "body_pose": body_pose_tensor,
+            "betas": betas,
+            "gender": gender,
+        }
+
+        # Convert SMPL dict to feature tensor (this is the reverse of what we do in generate)
+        # Note: This is a simplified version - may need adjustment based on primitive_utility API
+        history_motion = self.primitive_utility.smpl_dict_to_tensor(smpl_dict)
+        history_motion_normalized = self.dataset.normalize(history_motion)
+
+        transf_rotmat = torch.eye(3, device=device, dtype=torch.float32).unsqueeze(0).repeat(self.batch_size, 1, 1)
+        transf_transl = torch.zeros(3, device=device, dtype=torch.float32).reshape(1, 1, 3).repeat(self.batch_size, 1, 1)
+
+        return {
+            "gender": gender,
+            "betas": betas,
+            "pelvis_delta": pelvis_delta,
+            "history_motion": history_motion_normalized,
+            "transf_rotmat": transf_rotmat,
+            "transf_transl": transf_transl,
+        }
 
     def init_state(self) -> Dict[str, torch.Tensor]:
         device = self.device_t
@@ -393,7 +490,11 @@ class DartMotionGenerator(MotionGenerator):
     name = "dart-motion-gen"
 
     async def generate(
-        self, text_prompt: str, duration_seconds: Optional[float], fps: float
+        self,
+        text_prompt: str,
+        duration_seconds: Optional[float],
+        fps: float,
+        initial_frames: Optional[List[Dict]] = None,
     ) -> AsyncIterator[MotionFrame]:
         runtime = DartRuntime.get()
 
@@ -406,7 +507,16 @@ class DartMotionGenerator(MotionGenerator):
         all_text_embedding = runtime.encode_text(
             runtime.dataset.clip_model, texts, force_empty_zero=True
         ).to(dtype=torch.float32, device=runtime.device_t)
-        state = runtime.init_state()
+
+        # Initialize state from frontend frames if provided
+        if initial_frames:
+            if len(initial_frames) >= runtime.history_length:
+                frames = initial_frames[-runtime.history_length :]
+                state = runtime.init_state_from_frames(frames)
+            else:
+                state = runtime.init_state()
+        else:
+            state = runtime.init_state()
         interval = 1.0 / fps
         dart_index = {name: idx for idx, name in enumerate(DART_JOINT_NAMES)}
 
@@ -449,9 +559,8 @@ class DartMotionGenerator(MotionGenerator):
                     ]
 
                 frame = MotionFrame(
-                    index=sent,
                     timestamp=sent * interval,
-                    root_translation=[
+                    root_position=[
                         float(transl[local_idx, 0]),
                         float(transl[local_idx, 1]),
                         float(transl[local_idx, 2]),

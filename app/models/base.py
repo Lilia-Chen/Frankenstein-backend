@@ -15,5 +15,6 @@ class MotionGenerator(ABC):
         text_prompt: str,
         duration_seconds: Optional[float],
         fps: float,
+        initial_frames: Optional[list[dict]] = None,
     ) -> AsyncIterator[MotionFrame]:
         raise NotImplementedError

@@ -41,6 +41,7 @@ class MockMotionGenerator(MotionGenerator):
         text_prompt: str,
         duration_seconds: Optional[float],
         fps: float,
+        initial_frames: Optional[list[dict]] = None,
     ) -> AsyncIterator[MotionFrame]:
         interval = 1.0 / fps
         total_frames = None
@@ -50,9 +51,8 @@ class MockMotionGenerator(MotionGenerator):
         index = 0
         while total_frames is None or index < total_frames:
             frame = MotionFrame(
-                index=index,
                 timestamp=index * interval,
-                root_translation=ZERO_VEC3,
+                root_position=ZERO_VEC3,
                 root_rotation=IDENTITY_QUAT,
                 joint_rotations={name: IDENTITY_QUAT for name in JOINT_NAMES},
             )
