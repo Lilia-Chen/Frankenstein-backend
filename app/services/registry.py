@@ -13,4 +13,8 @@ def get_generator(model_name: Optional[str] = None) -> MotionGenerator:
         from app.models.dart import DartMotionGenerator
 
         return DartMotionGenerator()
+    if selected == "motionstreamer":
+        from app.models.motionstreamer import MotionStreamerGenerator
+
+        return MotionStreamerGenerator()
     raise ValueError(f"unknown model: {selected}")

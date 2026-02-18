@@ -167,6 +167,13 @@ wandb/
 # Cache
 .cache/
 
+# MotionStreamer downloaded models and data
+MotionStreamer/sentencet5-xxl/
+MotionStreamer/Causal_TAE/
+MotionStreamer/Experiments/
+MotionStreamer/humanml3d_272/mean_std/
+*.npy
+
 # ============================================================================
 # Keep These Files (negation patterns)
 # ============================================================================
