@@ -1,10 +1,11 @@
 import json
 import os
+from collections import deque
 from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from app.schemas import CancelRequest, GenerateRequest
+from app.schemas import CancelRequest, GenerateRequest, StateUpdateRequest
 from app.services.generator import SessionManager
 
 
@@ -26,6 +27,7 @@ async def handle_motion_ws(ws: WebSocket) -> None:
         }
     )
     manager = SessionManager()
+    frame_buffer: deque = deque(maxlen=5)
 
     try:
         while True:
@@ -53,11 +55,7 @@ async def handle_motion_ws(ws: WebSocket) -> None:
                     )
                     continue
 
-                # Extract current_frame if provided
-                current_frame = None
-                if payload.current_frame is not None:
-                    current_frame = payload.current_frame.model_dump()
-
+                history_frames = list(frame_buffer) if frame_buffer else None
                 manager.start(
                     ws=ws,
                     req_id=req.id,
@@ -65,8 +63,16 @@ async def handle_motion_ws(ws: WebSocket) -> None:
                     duration_seconds=payload.duration_seconds,
                     fps=fps,
                     model_name=os.getenv("MOTION_MODEL", "mock"),
-                    current_frame=current_frame,
+                    current_frames=history_frames,
                 )
+
+            elif msg_type == "state_update":
+                try:
+                    req = StateUpdateRequest.model_validate(msg)
+                except Exception:
+                    await ws.send_json({"type": "error", "id": "", "error": _invalid(msg)})
+                    continue
+                frame_buffer.append(req.frame.model_dump())
 
             elif msg_type == "cancel":
                 try:

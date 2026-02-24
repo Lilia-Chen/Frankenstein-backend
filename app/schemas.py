@@ -55,6 +55,11 @@ class GenerateRequest(BaseModel):
     payload: GeneratePayload
 
 
+class StateUpdateRequest(BaseModel):
+    type: Literal["state_update"]
+    frame: MotionFrame
+
+
 class CancelRequest(BaseModel):
     type: Literal["cancel"]
     id: str

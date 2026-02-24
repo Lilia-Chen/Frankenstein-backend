@@ -78,16 +78,10 @@ class SessionManager:
         duration_seconds: Optional[float],
         fps: float,
         model_name: Optional[str] = None,
-        current_frame: Optional[Dict] = None,
+        current_frames: Optional[List[Dict]] = None,
     ) -> None:
         if req_id in self._active:
             self._active[req_id].cancel_event.set()
-
-        frames_to_use: Optional[List[Dict]] = None
-        if current_frame is not None:
-            if hasattr(current_frame, "model_dump"):
-                current_frame = current_frame.model_dump()
-            frames_to_use = [current_frame, current_frame]
 
         cancel_event = asyncio.Event()
         task = asyncio.create_task(
@@ -99,7 +93,7 @@ class SessionManager:
                 fps,
                 cancel_event,
                 model_name,
-                frames_to_use,
+                current_frames,
             )
         )
         self._active[req_id] = GenerationState(cancel_event=cancel_event, task=task)

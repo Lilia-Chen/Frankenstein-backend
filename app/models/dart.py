@@ -290,8 +290,6 @@ class DartRuntime:
             # Body pose (joint rotations -> rotation matrices)
             # DART uses 21 joints (excluding pelvis which is in global_orient)
             body_pose_list = []
-            dart_index = {name: idx for idx, name in enumerate(DART_JOINT_NAMES)}
-
             for joint_name in DART_JOINT_NAMES[1:]:  # Skip pelvis (index 0)
                 if joint_name in frame_data["joint_rotations"]:
                     joint_quat_xyzw = frame_data["joint_rotations"][joint_name]
@@ -325,30 +323,44 @@ class DartRuntime:
             {"betas": betas[:, 0, :], "gender": gender}
         )
 
-        # Build SMPL dict for conversion
-        smpl_dict = {
+        primitive_dict = {
             "transl": transl_tensor,
             "global_orient": global_orient_tensor,
             "body_pose": body_pose_tensor,
             "betas": betas,
             "gender": gender,
+            "pelvis_delta": pelvis_delta,
+            "transf_rotmat": torch.eye(3, device=device, dtype=torch.float32).unsqueeze(0),
+            "transf_transl": torch.zeros(3, device=device, dtype=torch.float32).reshape(1, 1, 3),
         }
 
-        # Convert SMPL dict to feature tensor (this is the reverse of what we do in generate)
-        # Note: This is a simplified version - may need adjustment based on primitive_utility API
-        history_motion = self.primitive_utility.smpl_dict_to_tensor(smpl_dict)
-        history_motion_normalized = self.dataset.normalize(history_motion)
+        # Canonicalize to DART's local coordinate frame
+        new_transf_rotmat, new_transf_transl, primitive_dict = self.primitive_utility.canonicalize(primitive_dict)
 
-        transf_rotmat = torch.eye(3, device=device, dtype=torch.float32).unsqueeze(0).repeat(self.batch_size, 1, 1)
-        transf_transl = torch.zeros(3, device=device, dtype=torch.float32).reshape(1, 1, 3).repeat(self.batch_size, 1, 1)
+        # Compute motion features; calc_features returns T-1 deltas for T frames
+        motion_features = self.primitive_utility.calc_features(primitive_dict)
+
+        # Pad the last frame's delta by repeating (constant-velocity assumption)
+        motion_features["transl_delta"] = torch.cat(
+            [motion_features["transl_delta"], motion_features["transl_delta"][:, -1:, :]], dim=1
+        )
+        motion_features["joints_delta"] = torch.cat(
+            [motion_features["joints_delta"], motion_features["joints_delta"][:, -1:, :]], dim=1
+        )
+        motion_features["global_orient_delta_6d"] = torch.cat(
+            [motion_features["global_orient_delta_6d"], motion_features["global_orient_delta_6d"][:, -1:, :]], dim=1
+        )
+
+        history_motion = self.primitive_utility.dict_to_tensor(motion_features)
+        history_motion_normalized = self.dataset.normalize(history_motion)
 
         return {
             "gender": gender,
             "betas": betas,
             "pelvis_delta": pelvis_delta,
             "history_motion": history_motion_normalized,
-            "transf_rotmat": transf_rotmat,
-            "transf_transl": transf_transl,
+            "transf_rotmat": new_transf_rotmat,
+            "transf_transl": new_transf_transl,
         }
 
     def init_state(self) -> Dict[str, torch.Tensor]:
@@ -511,10 +523,11 @@ class DartMotionGenerator(MotionGenerator):
         # Initialize state from frontend frames if provided
         if initial_frames:
             if len(initial_frames) >= runtime.history_length:
-                frames = initial_frames[-runtime.history_length :]
-                state = runtime.init_state_from_frames(frames)
+                frames = initial_frames[-runtime.history_length:]
             else:
-                state = runtime.init_state()
+                pad = [initial_frames[0]] * (runtime.history_length - len(initial_frames))
+                frames = pad + initial_frames
+            state = runtime.init_state_from_frames(frames)
         else:
             state = runtime.init_state()
         interval = 1.0 / fps
