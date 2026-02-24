@@ -158,7 +158,7 @@ class DartRuntime:
         self.vae_model = vae_model
 
         diffusion_args = denoiser_args.diffusion_args
-        diffusion_args.respacing = ""
+        diffusion_args.respacing = os.getenv("DART_RESPACING", "ddim10")
         self.diffusion = self.create_gaussian_diffusion(diffusion_args)
 
         sequence_path = self.dart_root / "data" / "stand.pkl"
